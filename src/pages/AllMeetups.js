@@ -1,49 +1,48 @@
+import { useState, useEffect } from "react";
 import MeetupList from "../components/meetups/MeetupList";
 
-const DUMMY_DATA = [
-  {
-    id: "m1",
-    title: "This is a first meetup",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Stadtbild_M%C3%BCnchen.jpg/2560px-Stadtbild_M%C3%BCnchen.jpg",
-    address: "Meetupstreet 5, 12345 Meetup City",
-    description:
-      "This is a first, amazing meetup which you definitely should not miss. It will be a lot of fun!",
-  },
-  {
-    id: "m2",
-    title: "This is a second meetup",
-    image:
-      "https://www.stadtgui.de/_images/riedlinger_baggersee_20210603%20(48).jpg",
-    address: "Meetupstreet 5, 12345 Meetup City",
-    description:
-      "This is a first, amazing meetup which you definitely should not miss. It will be a lot of fun!",
-  },
-  {
-    id: "m3",
-    title: "This is a second meetup",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Donauw%C3%B6rth_-_Kalvarienberg_-_Donauw%C3%B6rth_v_NO_01.jpg/1280px-Donauw%C3%B6rth_-_Kalvarienberg_-_Donauw%C3%B6rth_v_NO_01.jpg",
-    address: "Meetupstreet 5, 12345 Meetup City",
-    description:
-      "This is a first, amazing meetup which you definitely should not miss. It will be a lot of fun!",
-  },
-  {
-    id: "m4",
-    title: "This is a second meetup",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Stadtbild_M%C3%BCnchen.jpg/2560px-Stadtbild_M%C3%BCnchen.jpg",
-    address: "Meetupstreet 5, 12345 Meetup City",
-    description:
-      "This is a first, amazing meetup which you definitely should not miss. It will be a lot of fun!",
-  },
-];
 
 function AllMeetupsPage(props) {
+  const [isLoading, setLoading] = useState(true);
+  const [loadedMeetups, setLoadedMeetups] = useState([]);
+
+  useEffect(() => {
+    setLoading(true)
+    const meetupsPromise = fetch(
+      "https://my-first-react-app-aafa2-default-rtdb.europe-west1.firebasedatabase.app/meetups.json"
+    );
+    meetupsPromise
+      .then((response) => {
+        setLoading(false);
+        return response.json();
+      })
+      .then((data) => {
+        const entries = [];
+        for (let key in data) {
+          const meetup = {
+            id: key,
+            ...data[key]
+          } 
+          entries.push(meetup);
+        }
+        setLoadedMeetups(entries);
+      });
+  
+  }, []);
+
+  
+  if (isLoading) {
+    return (
+      <section>
+        <p>Loading...</p>
+      </section>
+    );
+  }
+
   return (
     <section>
       <h1>All Meetups</h1>
-      <MeetupList  meetups={DUMMY_DATA} />
+      <MeetupList meetups={loadedMeetups} />
     </section>
   );
 }
