@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 
 
 const FavoritesContext = createContext({
@@ -16,13 +16,56 @@ export function FavoritesContextProvider(props) {
         setUserFavorites((prevUserFavorites) => {
             return prevUserFavorites.concat(favoriteMeetup)
         })
+        fetch('https://my-first-react-app-aafa2-default-rtdb.europe-west1.firebasedatabase.app/favorites.json', {
+            method: 'POST',
+            body: JSON.stringify(favoriteMeetup), // JSON.stringify Pflicht!
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).finally(() => getFavoritesHandler())
+
     }
 
     function removeFavoriteHandler(meetupId) {
         setUserFavorites((prevUserFavorites) => {
             return prevUserFavorites.filter(meetup => meetup.id !== meetupId)
         })
+        const favoriteToDelete = userFavorites.find(favorite => favorite.id === meetupId)
+        fetch(`https://my-first-react-app-aafa2-default-rtdb.europe-west1.firebasedatabase.app/favorites/${favoriteToDelete.favoriteId}.json`, {
+            method: 'DELETE',
+            // body: JSON.stringify({id: favoriteToDelete.favoriteId}), // JSON.stringify Pflicht!
+            // headers: {
+            //     'Content-Type': 'application/json'
+            // }
+        }).finally(() => getFavoritesHandler())
     }
+    
+    function getFavoritesHandler() {
+        fetch('https://my-first-react-app-aafa2-default-rtdb.europe-west1.firebasedatabase.app/favorites.json', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then((response) => {
+            return response.json()
+        }).then(favoritesJSON => {
+
+            const favorites = [];
+            for (let key in favoritesJSON) {
+                const favorite = {
+                    favoriteId: key,
+                    ...favoritesJSON[key]
+                } 
+                favorites.push(favorite);
+            }
+            setUserFavorites(favorites)
+        })
+    }
+
+    useEffect(() => {
+        // Favoriten erstmalig vom Server laden
+        getFavoritesHandler() 
+    }, [])
 
     function itemIsFavoriteHandler(meetupId) {
         return userFavorites.some(meetup => meetup.id === meetupId)
